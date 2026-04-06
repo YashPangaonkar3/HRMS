@@ -1,0 +1,51 @@
+{% extends 'base/admin_base.html' %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+  <h1 class="text-3xl font-bold text-gray-800">Departments</h1>
+  <a href="{% url 'admin_department_add' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-5 rounded-lg shadow-md transition transform hover:-translate-y-0.5">
+    + Add Department
+  </a>
+</div>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg mb-6 font-medium shadow-sm">
+      {{ message }}
+    </div>
+  {% endfor %}
+{% endif %}
+
+<div class="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100">
+  <table class="w-full text-sm text-left">
+    <thead class="bg-gray-50 text-gray-600 uppercase text-xs tracking-wider">
+      <tr>
+        <th class="px-6 py-4 font-bold">Department Name</th>
+        <th class="px-6 py-4 font-bold">Description</th>
+        <th class="px-6 py-4 font-bold text-center">Total Employees</th>
+        <th class="px-6 py-4 font-bold">Created On</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      {% for dept in departments %}
+      <tr class="hover:bg-blue-50/50 transition duration-150">
+        <td class="px-6 py-5 font-bold text-gray-900">{{ dept.name }}</td>
+        <td class="px-6 py-5 text-gray-600 truncate max-w-sm">{{ dept.description|default:"-" }}</td>
+        <td class="px-6 py-5 text-center">
+          <span class="inline-flex items-center justify-center bg-indigo-100 text-indigo-800 px-3.5 py-1 rounded-full text-xs font-bold ring-1 ring-inset ring-indigo-500/10">
+            {{ dept.employee_count }}
+          </span>
+        </td>
+        <td class="px-6 py-5 text-gray-500 font-medium">{{ dept.created_at|date:"M d, Y" }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="4" class="px-6 py-12 text-center text-gray-500 font-medium text-base">
+          No departments founded. Create your first one to organize your employees!
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

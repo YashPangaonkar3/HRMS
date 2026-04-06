@@ -1,0 +1,171 @@
+{% extends 'base/admin_base.html' %}
+
+{% block content %}
+<div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+  <div>
+    <h1 class="text-4xl font-extrabold tracking-tight text-slate-900 font-display">Absence Registry</h1>
+    <p class="text-slate-500 font-semibold mt-1">Process workforce leave requests and capacity planning</p>
+  </div>
+  
+  <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-center">
+    <!-- Search Bar -->
+    <div class="relative w-full sm:w-72 group">
+      <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+      </span>
+      <input type="text" id="leaveSearch" 
+             placeholder="Search requests..." 
+             class="block w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl leading-5 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 sm:text-sm transition-all shadow-sm font-semibold">
+    </div>
+  </div>
+</div>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="{% if message.tags == 'error' %}bg-rose-50 border-rose-500 text-rose-700{% else %}bg-emerald-50 border-emerald-500 text-emerald-700{% endif %} border-l-[6px] p-6 rounded-3xl mb-10 font-bold shadow-xl animate-fade-in-up">
+      <div class="flex items-center gap-3">
+        {% if message.tags == 'error' %}
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        {% else %}
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        {% endif %}
+        {{ message }}
+      </div>
+    </div>
+  {% endfor %}
+{% endif %}
+
+<div class="glass-card rounded-[32px] overflow-hidden p-8 border border-white/20 shadow-2xl shadow-indigo-900/5">
+  <div class="overflow-x-auto">
+    <table class="w-full text-left" id="leaveTable">
+      <thead>
+          <tr class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 border-b border-slate-100">
+              <th class="px-6 py-5">Personnel Artifact</th>
+              <th class="px-6 py-5">Leave Geometry</th>
+              <th class="px-6 py-5">Temporal Span (Duration)</th>
+              <th class="px-6 py-5">Verification Pulse</th>
+              <th class="px-6 py-5 text-right">Operations</th>
+          </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-50">
+        {% for leave in leaves %}
+        <tr class="group hover:bg-slate-50/50 transition-all duration-200">
+          <td class="px-6 py-6">
+            <div class="flex items-center gap-4">
+              <div class="w-11 h-11 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-500 font-black group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                {{ leave.employee.first_name|first|default:"L" }}
+              </div>
+              <div>
+                <p class="text-[15px] font-bold text-slate-900 font-display transition-colors group-hover:text-indigo-600">{{ leave.employee.get_full_name|default:leave.employee.username }}</p>
+                <p class="text-[11px] text-slate-400 font-semibold tracking-wide">Applied: {{ leave.applied_on|date:"M d, Y" }}</p>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-6 font-medium">
+            <div class="font-black text-indigo-600 uppercase text-[10px] tracking-widest mb-2">{{ leave.get_leave_type_display }}</div>
+            <div class="text-slate-500 text-xs bg-slate-50 p-3 rounded-xl border border-slate-100 italic" title="{{ leave.reason }}">
+              "{{ leave.reason|truncatechars:45 }}"
+            </div>
+          </td>
+          <td class="px-6 py-6">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-xl text-[11px] font-black border border-slate-800 shadow-lg tabular-nums">
+                {{ leave.start_date|date:"M d" }} ➔ {{ leave.end_date|date:"M d, Y" }}
+            </div>
+          </td>
+          <td class="px-6 py-6">
+            {% if leave.status == 'approved' %}
+              <div class="flex items-center gap-2 text-emerald-500">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
+                <span class="text-[11px] font-black uppercase tracking-wider">Approved</span>
+              </div>
+            {% elif leave.status == 'pending' %}
+              <div class="flex items-center gap-2 text-amber-500">
+                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                <span class="text-[11px] font-black uppercase tracking-wider">Pending</span>
+              </div>
+            {% elif leave.status == 'cancel_requested' %}
+              <div class="flex items-center gap-2 text-blue-500">
+                <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                <span class="text-[11px] font-black uppercase tracking-wider">Cancel Requested</span>
+              </div>
+            {% elif leave.status == 'cancelled' %}
+              <div class="flex items-center gap-2 text-slate-500">
+                <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+                <span class="text-[11px] font-black uppercase tracking-wider">Cancelled</span>
+              </div>
+            {% else %}
+              <div class="flex items-center gap-2 text-rose-500">
+                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                <span class="text-[11px] font-black uppercase tracking-wider">Rejected</span>
+              </div>
+            {% endif %}
+          </td>
+          <td class="px-6 py-6 text-right">
+            {% if leave.status == 'pending' %}
+              <div class="flex items-center justify-end gap-3">
+                <a href="{% url 'admin_leave_action' leave.id 'approve' %}" 
+                   class="w-10 h-10 flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-200"
+                   title="Approve Request">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                </a>
+                <a href="{% url 'admin_leave_action' leave.id 'reject' %}" 
+                   class="w-10 h-10 flex items-center justify-center rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm border border-rose-200"
+                   title="Reject Request">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </a>
+              </div>
+            {% elif leave.status == 'cancel_requested' %}
+              <div class="flex items-center justify-end gap-3">
+                <a href="{% url 'admin_leave_action' leave.id 'approve_cancel' %}" 
+                   class="w-10 h-10 flex items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-200"
+                   title="Approve Cancellation">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                </a>
+                <a href="{% url 'admin_leave_action' leave.id 'reject_cancel' %}" 
+                   class="w-10 h-10 flex items-center justify-center rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all shadow-sm border border-rose-200"
+                   title="Reject Cancellation">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </a>
+              </div>
+            {% else %}
+              <div class="text-[10px] text-slate-400 group-hover:text-slate-600 transition-colors">
+                <span class="font-black uppercase tracking-wider block mb-1">Reviewed By</span>
+                {% if leave.reviewed_by %}
+                  <span class="font-bold text-slate-900">{{ leave.reviewed_by.get_full_name|default:leave.reviewed_by.username }}</span>
+                {% else %}
+                  <span class="font-bold text-slate-900">N/A</span>
+                {% endif %}
+              </div>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="px-6 py-24 text-center">
+            <div class="flex flex-col items-center">
+              <div class="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center text-slate-200 mb-6">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              </div>
+              <p class="text-slate-900 font-extrabold text-xl font-display uppercase tracking-widest">Clear Queue</p>
+              <p class="text-slate-400 font-semibold px-20">All leave requests have been processed. System is currently at nominal capacity.</p>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  document.getElementById('leaveSearch').addEventListener('keyup', function() {
+    const query = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#leaveTable tbody tr');
+    
+    rows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      row.style.display = text.includes(query) ? '' : 'none';
+    });
+  });
+</script>
+{% endblock %}

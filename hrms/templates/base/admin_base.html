@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRMS Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361EE;
+            --secondary: #3F37C9;
+            --accent: #4CC9F0;
+            --bg-main: #F8FAFC;
+            --glass: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --sidebar-dark: #001144;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, .font-display { font-family: 'Manrope', sans-serif; }
+        
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+        
+        .sidebar-glass {
+            background: linear-gradient(180deg, #001144 0%, #000822 100%);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Modern Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+    </style>
+</head>
+
+<body class="bg-[#F8FAFC] flex antialiased text-slate-800">
+
+    <!-- Sidebar (High-End Dark Indigo) -->
+    <div class="w-72 h-screen sidebar-glass text-white flex flex-col fixed z-20 overflow-hidden">
+        <!-- Logo Area -->
+        <div class="p-8 pb-10 flex items-center gap-4">
+            <div class="w-10 h-10 bg-gradient-to-tr from-indigo-500 to-indigo-400 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/40 transform rotate-3">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            </div>
+            <div>
+                <h1 class="text-xl font-extrabold tracking-tight font-display">HRMS</h1>
+                <p class="text-[10px] uppercase tracking-[0.2em] text-indigo-300 font-bold opacity-70">Genicminds</p>
+            </div>
+        </div>
+        
+        <nav class="flex-1 px-4 space-y-1 mt-2 overflow-y-auto">
+            <p class="px-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.15em] mb-4">Main Navigation</p>
+            
+            <a href="{% url 'admin_dashboard' %}"
+                class="flex items-center gap-3 px-4 py-3.5 rounded-2xl {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 shadow-xl shadow-indigo-900/40{% else %}text-slate-400 hover:bg-white/5 hover:text-white{% endif %} font-semibold transition-all duration-300 group">
+                <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                Dashboard
+            </a>
+            
+            <a href="{% url 'admin_employees' %}"
+                class="flex items-center gap-3 px-4 py-3.5 rounded-2xl {% if 'employee' in request.resolver_match.url_name %}bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 shadow-xl shadow-indigo-900/40{% else %}text-slate-400 hover:bg-white/5 hover:text-white{% endif %} font-semibold transition-all duration-300 group">
+                <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354l-5.414 5.414a2 2 0 102.828 2.828L12 10.05l2.586 2.546a2 2 0 102.828-2.828L12 4.354zM9 14h6m-3 0v6"></path></svg>
+                Workforce
+            </a>
+
+            <a href="{% url 'admin_departments' %}"
+                class="flex items-center gap-3 px-4 py-3.5 rounded-2xl {% if 'department' in request.resolver_match.url_name %}bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 shadow-xl shadow-indigo-900/40{% else %}text-slate-400 hover:bg-white/5 hover:text-white{% endif %} font-semibold transition-all duration-300 group">
+                <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                Departments
+            </a>
+
+            <a href="{% url 'admin_leaves' %}"
+                class="flex items-center gap-3 px-4 py-3.5 rounded-2xl {% if 'leave' in request.resolver_match.url_name %}bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 shadow-xl shadow-indigo-900/40{% else %}text-slate-400 hover:bg-white/5 hover:text-white{% endif %} font-semibold transition-all duration-300 group">
+                <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                Leave Records
+            </a>
+
+            <a href="{% url 'admin_payroll' %}"
+                class="flex items-center gap-3 px-4 py-3.5 rounded-2xl {% if 'payroll' in request.resolver_match.url_name %}bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 shadow-xl shadow-indigo-900/40{% else %}text-slate-400 hover:bg-white/5 hover:text-white{% endif %} font-semibold transition-all duration-300 group">
+                <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Payroll
+            </a>
+
+            <a href="{% url 'admin_attendance' %}"
+                class="flex items-center gap-3 px-4 py-3.5 rounded-2xl {% if 'attendance' in request.resolver_match.url_name %}bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 shadow-xl shadow-indigo-900/40{% else %}text-slate-400 hover:bg-white/5 hover:text-white{% endif %} font-semibold transition-all duration-300 group">
+                <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Attendance
+            </a>
+
+            <a href="{% url 'admin_announcements' %}"
+                class="flex items-center gap-3 px-4 py-3.5 rounded-2xl {% if 'announcement' in request.resolver_match.url_name %}bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 shadow-xl shadow-indigo-900/40{% else %}text-slate-400 hover:bg-white/5 hover:text-white{% endif %} font-semibold transition-all duration-300 group">
+                <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
+                Broadcasts
+            </a>
+        </nav>
+        
+        <!-- User Profile Footer -->
+        <div class="p-6 mt-auto shrink-0 border-t border-white/5 bg-black/20">
+            <div class="flex items-center gap-4 mb-5">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex justify-center items-center text-indigo-400 font-black text-lg shadow-inner">
+                    {{ request.user.first_name|make_list|first|default:"A" }}
+                </div>
+                <div class="overflow-hidden">
+                    <p class="text-sm font-bold text-white truncate font-display">{{ request.user.get_full_name|default:request.user.username }}</p>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Administrator</p>
+                    </div>
+                </div>
+            </div>
+            <a href="{% url 'logout' %}"
+                class="flex items-center justify-center gap-2 w-full bg-white/5 hover:bg-red-500/20 text-slate-400 hover:text-red-400 font-bold px-4 py-3 rounded-2xl transition-all border border-white/10 hover:border-red-500/30 group">
+                <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                Logout
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="ml-72 flex-1 min-h-screen">
+        <div class="p-10 max-w-[1600px] mx-auto animate-fade-in-up flex flex-col min-h-screen">
+            <div class="flex-1">
+                {% block content %}{% endblock %}
+            </div>
+            
+            <footer class="mt-20 pt-10 border-t border-slate-200/60 text-center text-slate-400 text-[11px] font-bold uppercase tracking-[0.3em] pb-8 opacity-60 font-display">
+                <p>© 2026 <span class="text-indigo-600 font-extrabold tracking-normal">@Yash</span> | Precision HR Intelligence</p>
+            </footer>
+        </div>
+    </div>
+
+</body>
+</html>
+
+</body>
+</html>

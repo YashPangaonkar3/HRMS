@@ -1,0 +1,169 @@
+{% extends 'base/employee_base.html' %}
+
+{% block content %}
+<div class="mb-12 flex justify-between items-end">
+  <div>
+    <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight font-display">Absence Portal</h1>
+    <p class="text-slate-500 mt-2 font-semibold">Coordinate your schedule and request operational downtime.</p>
+  </div>
+</div>
+
+<div class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div class="bg-white p-4 rounded-2xl shadow border border-slate-100">
+    <p class="text-xs font-black uppercase text-slate-400 tracking-wide">Monthly Leave Quota</p>
+    <p class="text-2xl font-extrabold text-slate-800">{{ monthly_leave_quota|default:0 }}</p>
+  </div>
+  <div class="bg-white p-4 rounded-2xl shadow border border-slate-100">
+    <p class="text-xs font-black uppercase text-slate-400 tracking-wide">Used This Month</p>
+    <p class="text-2xl font-extrabold text-slate-800">{{ monthly_leave_used|default:0 }}</p>
+  </div>
+  <div class="bg-white p-4 rounded-2xl shadow border border-slate-100">
+    <p class="text-xs font-black uppercase text-slate-400 tracking-wide">Remaining</p>
+    <p class="text-2xl font-extrabold text-slate-800">{{ monthly_leave_remaining|default:0 }}</p>
+  </div>
+</div>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="bg-emerald-50 border-l-[6px] border-emerald-500 text-emerald-700 p-6 rounded-3xl mb-10 font-bold shadow-xl animate-fade-in-up">
+      <div class="flex items-center gap-3">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        {{ message }}
+      </div>
+    </div>
+  {% endfor %}
+{% endif %}
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+  
+  <!-- Form Segment -->
+  <div class="lg:col-span-1">
+    <div class="glass-card rounded-[40px] p-10 border border-white/40 shadow-2xl sticky top-10">
+      <h2 class="text-2xl font-black text-slate-900 mb-8 flex items-center gap-3 font-display">
+        <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+        </div>
+        New Intent
+      </h2>
+      
+      <form method="POST" class="space-y-6">
+        {% csrf_token %}
+        <div>
+          <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Classification</label>
+          <select name="leave_type" required class="w-full border border-slate-200 rounded-2xl px-5 py-4 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:outline-none transition-all font-bold text-slate-800 appearance-none">
+            <option value="casual">Casual Leave</option>
+            <option value="sick">Sick Leave</option>
+            <option value="unpaid">Unpaid Leave</option>
+          </select>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Commence</label>
+            <input type="date" name="start_date" required class="w-full border border-slate-200 rounded-2xl px-4 py-4 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:outline-none transition-all font-bold text-slate-800 text-sm">
+          </div>
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Conclude</label>
+            <input type="date" name="end_date" required class="w-full border border-slate-200 rounded-2xl px-4 py-4 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:outline-none transition-all font-bold text-slate-800 text-sm">
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Justification</label>
+          <textarea name="reason" rows="4" required placeholder="Describe the operational necessity for this absence..." class="w-full border border-slate-200 rounded-2xl px-5 py-4 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:outline-none transition-all font-bold text-slate-800 text-sm placeholder:text-slate-400 placeholder:italic"></textarea>
+        </div>
+        
+        <button type="submit" class="w-full bg-slate-900 border-b-4 border-slate-950 hover:bg-slate-800 text-white font-black py-4 rounded-2xl shadow-xl shadow-slate-900/10 transition-all transform hover:scale-[1.02] active:scale-[0.98] uppercase tracking-widest text-xs">
+          Transmit Request
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- History Segment -->
+  <div class="lg:col-span-2">
+    <div class="glass-card rounded-[40px] p-10 border border-white/10 shadow-2xl">
+      <div class="flex justify-between items-center mb-10 leading-none">
+          <h2 class="text-3xl font-black text-slate-900 font-display tracking-tight">Transmission History</h2>
+          <div class="px-4 py-2 bg-slate-50 rounded-xl border border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest italic">
+              Verified Stream
+          </div>
+      </div>
+      
+      <div class="space-y-6">
+        {% for leave in leaves %}
+          <div class="glass-card p-6 rounded-[32px] border border-white/60 hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-300 group relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-2 h-full {% if leave.status == 'approved' %}bg-emerald-500 shadow-[0_0_10px_#10b981]{% elif leave.status == 'rejected' %}bg-rose-500 shadow-[0_0_10px_#f43f5e]{% else %}bg-amber-400 shadow-[0_0_10px_#fbbf24]{% endif %}"></div>
+            
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10">
+              <div class="flex-1">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-lg font-black text-slate-900 font-display group-hover:text-blue-600 transition-colors uppercase tracking-tight">{{ leave.get_leave_type_display }}</span>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">/ Applied {{ leave.applied_on|date:"M d" }}</span>
+                </div>
+                <div class="flex items-center gap-3">
+                   <div class="inline-flex items-center gap-2 px-3 py-1 bg-slate-900 text-white rounded-lg text-[10px] font-black border border-slate-800 shadow-md">
+                        {{ leave.start_date|date:"F d, Y" }} ➔ {{ leave.end_date|date:"F d, Y" }}
+                    </div>
+                </div>
+              </div>
+
+              <div class="flex flex-col items-end gap-2">
+                {% if leave.status == 'approved' %}
+                  <div class="flex items-center gap-2 text-emerald-500 bg-emerald-50/50 px-4 py-2 rounded-xl border border-emerald-100/50">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
+                    <span class="text-[11px] font-black uppercase tracking-[0.2em]">Authorized</span>
+                  </div>
+                {% elif leave.status == 'pending' %}
+                  <div class="flex items-center gap-2 text-amber-500 bg-amber-50/50 px-4 py-2 rounded-xl border border-amber-100/50 animate-pulse">
+                    <span class="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_#f59e0b]"></span>
+                    <span class="text-[11px] font-black uppercase tracking-[0.2em]">In Queue</span>
+                  </div>
+                {% elif leave.status == 'cancel_requested' %}
+                  <div class="flex items-center gap-2 text-blue-500 bg-blue-50/50 px-4 py-2 rounded-xl border border-blue-100/50 animate-pulse">
+                    <span class="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_#3b82f6]"></span>
+                    <span class="text-[11px] font-black uppercase tracking-[0.2em]">Cancel Requested</span>
+                  </div>
+                {% elif leave.status == 'cancelled' %}
+                  <div class="flex items-center gap-2 text-slate-500 bg-slate-50/50 px-4 py-2 rounded-xl border border-slate-100">
+                    <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+                    <span class="text-[11px] font-black uppercase tracking-[0.2em]">Cancelled</span>
+                  </div>
+                {% elif leave.status == 'rejected' %}
+                  <div class="flex items-center gap-2 text-rose-500 bg-rose-50/50 px-4 py-2 rounded-xl border border-rose-100/50">
+                    <span class="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_#f43f5e]"></span>
+                    <span class="text-[11px] font-black uppercase tracking-[0.2em]">Declined</span>
+                  </div>
+                {% endif %}
+
+                {% if leave.cancellation_eligible %}
+                    <form method="post" action="{% url 'employee_leave_cancel' leave.id %}">
+                      {% csrf_token %}
+                      <button type="submit" class="mt-2 text-[11px] font-black uppercase tracking-wider text-rose-600 border border-rose-200 px-3 py-2 rounded-xl hover:bg-rose-50">Request Cancellation</button>
+                    </form>
+                {% endif %}
+              </div>
+            </div>
+            
+            <div class="mt-6 pt-6 border-t border-slate-100/50">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Justification Log</p>
+                <div class="bg-slate-50/80 p-4 rounded-2xl text-slate-600 text-sm font-semibold italic border border-slate-100/50 leading-relaxed group-hover:bg-white transition-colors">
+                  "{{ leave.reason }}"
+                </div>
+            </div>
+          </div>
+        {% empty %}
+          <div class="flex flex-col items-center justify-center py-24 bg-slate-50/50 border-2 border-dashed border-slate-200 rounded-[40px] text-center px-10">
+            <div class="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center mb-6 text-slate-300">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+            </div>
+            <p class="text-slate-900 font-extrabold text-xl font-display uppercase tracking-widest mb-2">History Null</p>
+            <p class="text-slate-400 font-semibold max-w-sm">No leave deployments recorded for this account. Your history will manifest here as requests are submitted.</p>
+          </div>
+        {% endfor %}
+      </div>
+      
+    </div>
+  </div>
+</div>
+{% endblock %}

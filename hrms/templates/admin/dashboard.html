@@ -1,0 +1,186 @@
+{% extends 'base/admin_base.html' %}
+
+{% block content %}
+
+<div class="flex items-end justify-between mb-10">
+    <div>
+        <h1 class="text-4xl font-extrabold tracking-tight text-slate-900 font-display">Command Center</h1>
+        <p class="text-slate-500 font-semibold mt-1">Real-time HR Intelligence & Operations</p>
+    </div>
+    <div class="flex items-center gap-4">
+        <div class="text-right">
+            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">System Status</p>
+            <div class="flex items-center gap-2 mt-1">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]"></span>
+                <span class="text-xs font-bold text-slate-700">Operational</span>
+            </div>
+        </div>
+
+        <details class="relative">
+            <summary class="px-3 py-2 flex items-center gap-2 rounded-full border border-slate-200 bg-white text-slate-600 cursor-pointer hover:bg-slate-50">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                <span class="text-xs font-semibold">Notifications</span>
+                {% if notification_unread_count %}
+                <span class="px-2 py-0.5 text-[10px] rounded-full bg-rose-500 text-white font-black">{{ notification_unread_count }}</span>
+                {% endif %}
+            </summary>
+            <div class="absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-xl border border-slate-200 z-30 max-h-80 overflow-y-auto p-3">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold uppercase text-slate-500">Latest updates</span>
+                    <a href="{% url 'notification_mark_all_read' %}" class="text-[10px] font-semibold text-blue-600 hover:text-blue-800">Mark all read</a>
+                </div>
+                {% if notifications %}
+                    {% for n in notifications %}
+                        {% if n.is_read %}
+                            <div class="px-3 py-2 rounded-xl mb-2 border bg-slate-50 border-slate-200">
+                        {% else %}
+                            <div class="px-3 py-2 rounded-xl mb-2 border bg-indigo-50 border-indigo-200">
+                        {% endif %}
+                            <p class="text-[12px] leading-tight text-slate-700">{{ n.message }}</p>
+                            <div class="mt-2 flex justify-between items-center">
+                                <span class="text-[10px] text-slate-500">{{ n.created_at|timesince }} ago</span>
+                                {% if not n.is_read %}
+                                    <a href="{% url 'notification_mark_read' n.id %}" class="text-[10px] font-bold text-blue-600 hover:text-blue-800">Mark read</a>
+                                {% else %}
+                                    <span class="text-[10px] text-green-600">Read</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="p-4 text-center text-slate-500 text-xs">No notifications yet.</div>
+                {% endif %}
+            </div>
+        </details>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+
+    <div class="glass-card rounded-3xl p-7 transition-all duration-300 hover:translate-y-[-4px] hover:shadow-xl group border-l-[6px] border-blue-500">
+        <div class="flex items-center gap-4 mb-4">
+            <div class="p-3 bg-blue-50 text-blue-500 rounded-2xl group-hover:bg-blue-500 group-hover:text-white transition-colors duration-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            </div>
+            <p class="text-[11px] font-black uppercase tracking-widest text-slate-400">Total Workforce</p>
+        </div>
+        <p class="text-4xl font-black text-slate-900 font-display tabular-nums tracking-tighter">{{ total_employees }}</p>
+    </div>
+
+    <div class="glass-card rounded-3xl p-7 transition-all duration-300 hover:translate-y-[-4px] hover:shadow-xl group border-l-[6px] border-amber-500">
+        <div class="flex items-center gap-4 mb-4">
+            <div class="p-3 bg-amber-50 text-amber-500 rounded-2xl group-hover:bg-amber-500 group-hover:text-white transition-colors duration-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <p class="text-[11px] font-black uppercase tracking-widest text-slate-400">Pending Actions</p>
+        </div>
+        <p class="text-4xl font-black text-slate-900 font-display tabular-nums tracking-tighter">{{ pending_approvals }}</p>
+    </div>
+
+    <div class="glass-card rounded-3xl p-7 transition-all duration-300 hover:translate-y-[-4px] hover:shadow-xl group border-l-[6px] border-emerald-500">
+        <div class="flex items-center gap-4 mb-4">
+            <div class="p-3 bg-emerald-50 text-emerald-500 rounded-2xl group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            </div>
+            <p class="text-[11px] font-black uppercase tracking-widest text-slate-400">Off Today</p>
+        </div>
+        <p class="text-4xl font-black text-slate-900 font-display tabular-nums tracking-tighter">{{ on_leave_today }}</p>
+    </div>
+
+    <div class="glass-card rounded-3xl p-7 transition-all duration-300 hover:translate-y-[-4px] hover:shadow-xl group border-l-[6px] border-indigo-500">
+        <div class="flex items-center gap-4 mb-4">
+            <div class="p-3 bg-indigo-50 text-indigo-500 rounded-2xl group-hover:bg-indigo-500 group-hover:text-white transition-colors duration-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+            </div>
+            <p class="text-[11px] font-black uppercase tracking-widest text-slate-400">Internal Units</p>
+        </div>
+        <p class="text-4xl font-black text-slate-900 font-display tabular-nums tracking-tighter">{{ total_departments }}</p>
+    </div>
+
+</div>
+
+<!-- Recent Employees Table -->
+<div class="glass-card rounded-[32px] overflow-hidden p-8">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h2 class="text-2xl font-black text-slate-900 font-display tracking-tight">Recent Onboarding</h2>
+            <p class="text-slate-500 text-sm font-semibold">Latest staff additions and their verification status</p>
+        </div>
+        <a href="{% url 'admin_employees' %}" class="px-5 py-2.5 bg-indigo-50 text-indigo-600 rounded-2xl font-bold text-xs hover:bg-indigo-600 hover:text-white transition-all duration-300">
+            View All Staff
+        </a>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 border-b border-slate-100">
+                    <th class="px-6 py-5">Employee Artifact</th>
+                    <th class="px-6 py-5">Identity Control</th>
+                    <th class="px-6 py-5">Organizational Unit</th>
+                    <th class="px-6 py-5">Verification Pulse</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+                {% for emp in recent_employees %}
+                <tr class="group hover:bg-indigo-50/30 transition-all duration-200">
+                    <td class="px-6 py-6">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 font-black group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors">
+                                {{ emp.first_name|first|default:"E" }}
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-slate-900 font-display">{{ emp.get_full_name }}</p>
+                                <p class="text-[11px] text-slate-400 font-medium">UID: #{{ emp.id|add:"1000" }}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-6">
+                        <span class="text-sm font-bold text-slate-600 font-mono">{{ emp.username }}</span>
+                    </td>
+                    <td class="px-6 py-6">
+                        <span class="px-3 py-1.5 bg-slate-100 text-slate-500 rounded-lg text-[10px] font-black uppercase tracking-wider group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">
+                            {{ emp.department.name|default:"Floating" }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-6">
+                        {% if emp.status == 'approved' %}
+                            <div class="flex items-center gap-2 text-emerald-500">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                <span class="text-[10px] font-black uppercase tracking-wider">Approved</span>
+                            </div>
+                        {% elif emp.status == 'pending' %}
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-2 text-amber-500">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                    <span class="text-[10px] font-black uppercase tracking-wider">Awaiting Pulse</span>
+                                </div>
+                                <div class="flex items-center gap-2 border-l border-slate-200 pl-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <a href="{% url 'admin_status_action' emp.id 'approve' %}" class="w-8 h-8 flex items-center justify-center bg-emerald-500 text-white rounded-lg hover:scale-110 transition-transform shadow-lg shadow-emerald-500/20">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    </a>
+                                    <a href="{% url 'admin_status_action' emp.id 'reject' %}" class="w-8 h-8 flex items-center justify-center bg-rose-500 text-white rounded-lg hover:scale-110 transition-transform shadow-lg shadow-rose-500/20">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </a>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="flex items-center gap-2 text-rose-500">
+                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                <span class="text-[10px] font-black uppercase tracking-wider">Decommissioned</span>
+                            </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="px-6 py-12 text-slate-400 text-center font-medium italic">No personnel records detected in the local cache.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

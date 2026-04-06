@@ -1,0 +1,223 @@
+{% extends 'base/admin_base.html' %}
+
+{% block content %}
+<div class="mb-6 flex flex-wrap gap-3 items-center justify-between">
+  <div class="flex items-center gap-4">
+    <div class="w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-lg bg-slate-100">
+      {% if employee.profile_picture %}
+        <img src="{{ employee.profile_picture.url }}" alt="{{ employee.get_full_name|default:employee.username }}" class="w-full h-full object-cover" />
+      {% else %}
+        <div class="w-full h-full bg-blue-500 flex items-center justify-center text-white text-4xl font-extrabold">{{ employee.first_name|make_list|first|default:"U" }}</div>
+      {% endif %}
+    </div>
+    <div>
+      <a href="{% url 'admin_employees' %}" class="text-blue-600 hover:underline text-sm font-bold">&larr; Back to Employees</a>
+      <h1 class="text-3xl font-extrabold text-gray-800 mt-1">{{ employee.get_full_name|default:employee.username }}</h1>
+      <p class="text-gray-500 text-sm mt-1">{{ employee.designation|default:"No designation" }} &bull; {{ employee.department.name|default:"Unassigned" }}</p>
+    </div>
+  </div>
+  <div class="flex gap-3">
+    {% if employee.status == 'approved' %}
+      <span class="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-bold">Active</span>
+    {% elif employee.status == 'pending' %}
+      <span class="bg-yellow-100 text-yellow-700 px-4 py-2 rounded-full text-sm font-bold">Pending</span>
+    {% else %}
+      <span class="bg-red-100 text-red-700 px-4 py-2 rounded-full text-sm font-bold">Rejected</span>
+    {% endif %}
+  </div>
+</div>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded mb-6 font-medium">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<!-- Summary Stats -->
+<div class="grid grid-cols-3 gap-4 mb-8">
+  <div class="bg-white rounded-2xl shadow p-5 text-center border border-slate-100">
+    <p class="text-3xl font-black text-green-600">{{ total_present }}</p>
+    <p class="text-xs font-bold text-slate-400 uppercase mt-1">Days Present</p>
+  </div>
+  <div class="bg-white rounded-2xl shadow p-5 text-center border border-slate-100">
+    <p class="text-3xl font-black text-red-500">{{ total_absent }}</p>
+    <p class="text-xs font-bold text-slate-400 uppercase mt-1">Days Absent</p>
+  </div>
+  <div class="bg-white rounded-2xl shadow p-5 text-center border border-slate-100">
+    <p class="text-3xl font-black text-blue-600">{{ total_leave_days }}</p>
+    <p class="text-xs font-bold text-slate-400 uppercase mt-1">Leave Days Taken</p>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+
+  <!-- Left: Edit Profile -->
+  <div class="xl:col-span-1">
+    <div class="bg-white rounded-2xl shadow border border-slate-100 overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100 bg-slate-50">
+        <h2 class="font-bold text-slate-700 text-lg">Edit Profile</h2>
+      </div>
+      <form method="POST" class="p-6 space-y-4">
+        {% csrf_token %}
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">First Name</label>
+            <input type="text" name="first_name" value="{{ employee.first_name }}" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Last Name</label>
+            <input type="text" name="last_name" value="{{ employee.last_name }}" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Email</label>
+          <input type="email" name="email" value="{{ employee.email }}" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Phone</label>
+          <input type="text" name="phone" value="{{ employee.phone|default:'' }}" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Designation</label>
+          <input type="text" name="designation" value="{{ employee.designation|default:'' }}" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Date of Joining</label>
+          <input type="date" name="date_joined" value="{{ employee.date_joined|date:'Y-m-d'|default:'' }}" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Bank Name</label>
+          <input type="text" name="bank_name" value="{{ employee.bank_name|default:'' }}" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">PAN Number</label>
+          <input type="text" name="pan_number" value="{{ employee.pan_number|default:'' }}" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Account Number</label>
+          <input type="text" name="account_number" value="{{ employee.account_number|default:'' }}" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Department</label>
+          <select name="department" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="">-- Unassigned --</option>
+            {% for dept in departments %}
+              <option value="{{ dept.id }}" {% if employee.department.id == dept.id %}selected{% endif %}>{{ dept.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Status</label>
+          <select name="status" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="approved" {% if employee.status == 'approved' %}selected{% endif %}>Approved / Active</option>
+            <option value="pending"  {% if employee.status == 'pending'  %}selected{% endif %}>Pending</option>
+            <option value="rejected" {% if employee.status == 'rejected' %}selected{% endif %}>Rejected</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Monthly Leave Quota</label>
+          <input type="number" name="monthly_leave_quota" min="0" value="{{ employee.monthly_leave_quota|default:2 }}" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition shadow-md shadow-blue-500/20">
+          Save Changes
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Right: History -->
+  <div class="xl:col-span-2 space-y-6">
+
+    <!-- Attendance History -->
+    <div class="bg-white rounded-2xl shadow border border-slate-100 overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h2 class="font-bold text-slate-700 text-lg">Attendance History</h2>
+        <span class="bg-blue-50 text-blue-600 font-bold px-3 py-1 rounded-lg text-sm">{{ attendances|length }} records</span>
+      </div>
+      <div class="overflow-x-auto" style="max-height:320px; overflow-y:auto;">
+        <table class="w-full text-sm text-left">
+          <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-bold sticky top-0">
+            <tr>
+              <th class="px-5 py-3">Date</th>
+              <th class="px-5 py-3">Clock In</th>
+              <th class="px-5 py-3">Clock Out</th>
+              <th class="px-5 py-3">Status</th>
+              <th class="px-5 py-3">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for att in attendances %}
+            <tr class="hover:bg-slate-50 transition">
+              <td class="px-5 py-3 font-semibold text-slate-700">{{ att.date|date:"M d, Y" }}</td>
+              <td class="px-5 py-3 text-slate-500">{{ att.clock_in|time:"h:i A"|default:"—" }}</td>
+              <td class="px-5 py-3 text-slate-500">{{ att.clock_out|time:"h:i A"|default:"—" }}</td>
+              <td class="px-5 py-3">
+                {% if att.status == 'present' %}
+                  <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">Present</span>
+                {% elif att.status == 'absent' %}
+                  <span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full">Absent</span>
+                {% elif att.status == 'half_day' %}
+                  <span class="bg-yellow-100 text-yellow-700 text-xs font-bold px-2 py-0.5 rounded-full">Half Day</span>
+                {% else %}
+                  <span class="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-0.5 rounded-full">Late</span>
+                {% endif %}
+              </td>
+              <td class="px-5 py-3">
+                <a href="{% url 'admin_edit_attendance' att.id %}" class="text-blue-600 hover:underline text-xs font-bold">Edit</a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="px-6 py-8 text-center text-slate-400">No attendance records.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Leave History -->
+    <div class="bg-white rounded-2xl shadow border border-slate-100 overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+        <h2 class="font-bold text-slate-700 text-lg">Leave History</h2>
+        <span class="bg-purple-50 text-purple-600 font-bold px-3 py-1 rounded-lg text-sm">{{ leaves|length }} applications</span>
+      </div>
+      <div class="overflow-x-auto" style="max-height:320px; overflow-y:auto;">
+        <table class="w-full text-sm text-left">
+          <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-bold sticky top-0">
+            <tr>
+              <th class="px-5 py-3">Type</th>
+              <th class="px-5 py-3">From</th>
+              <th class="px-5 py-3">To</th>
+              <th class="px-5 py-3">Reason</th>
+              <th class="px-5 py-3">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for leave in leaves %}
+            <tr class="hover:bg-slate-50 transition">
+              <td class="px-5 py-3 font-semibold text-slate-700">{{ leave.get_leave_type_display }}</td>
+              <td class="px-5 py-3 text-slate-500">{{ leave.start_date|date:"M d, Y" }}</td>
+              <td class="px-5 py-3 text-slate-500">{{ leave.end_date|date:"M d, Y" }}</td>
+              <td class="px-5 py-3 text-slate-400 max-w-xs truncate">{{ leave.reason }}</td>
+              <td class="px-5 py-3">
+                {% if leave.status == 'approved' %}
+                  <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">Approved</span>
+                {% elif leave.status == 'pending' %}
+                  <span class="bg-yellow-100 text-yellow-700 text-xs font-bold px-2 py-0.5 rounded-full">Pending</span>
+                {% else %}
+                  <span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full">Rejected</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="px-6 py-8 text-center text-slate-400">No leave applications.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

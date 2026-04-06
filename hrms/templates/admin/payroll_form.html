@@ -1,0 +1,133 @@
+{% extends 'base/admin_base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto mt-4">
+  <div class="flex items-center mb-8">
+    <a href="{% url 'admin_payroll' %}" class="text-gray-500 hover:text-indigo-600 mr-4 transition flex items-center bg-white p-2.5 rounded-full shadow-sm hover:shadow-md">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+    </a>
+    <h1 class="text-3xl font-extrabold text-gray-800 tracking-tight">Generate Payroll Record</h1>
+  </div>
+
+  <div class="bg-white rounded-2xl shadow-xl px-10 py-10 border border-gray-100">
+    <form method="POST">
+      {% csrf_token %}
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-2">Select Staff Member</label>
+          <select id="employeeSelect" name="employee_id" required class="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all font-bold text-gray-800 shadow-sm">
+            <option value="" disabled selected>-- Select an active staff member --</option>
+            {% for emp in employees %}
+              <option value="{{ emp.id }}">{{ emp.get_full_name|default:emp.username }} - {{ emp.designation|default:"Staff" }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-2">Quick Info</label>
+          <div class="bg-white border border-gray-200 rounded-xl p-4 text-xs text-gray-600 space-y-1">
+            <div class="quick-info-row" data-key="employee_id"><strong>Employee ID:</strong> <span id="employee_id_label">N/A</span></div>
+            <div class="quick-info-row" data-key="department"><strong>Department:</strong> <span id="department_label">N/A</span></div>
+            <div class="quick-info-row" data-key="designation"><strong>Designation:</strong> <span id="designation_label">N/A</span></div>
+            <div class="quick-info-row" data-key="date_joined"><strong>Date of Joining:</strong> <span id="doj_label">N/A</span></div>
+            <div class="quick-info-row" data-key="bank_name"><strong>Bank Name:</strong> <span id="bank_label">N/A</span></div>
+            <div class="quick-info-row" data-key="pan_number"><strong>PAN No:</strong> <span id="pan_label">N/A</span></div>
+            <div class="quick-info-row" data-key="account_number"><strong>A/C No:</strong> <span id="ac_label">N/A</span></div>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-2">Pay Period (Month/Year)</label>
+          <input type="month" name="month" required class="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all shadow-sm">
+        </div>
+      </div>
+
+      <h3 class="text-lg font-black text-slate-800 mb-4 border-b pb-2">Financial Breakdown</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-2">Basic Salary (₹)</label>
+          <input type="number" step="0.01" name="basic_salary" required placeholder="5000.00" class="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 font-bold transition-all shadow-sm">
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-green-700 mb-2">Bonuses / Rewards (₹)</label>
+          <input type="number" step="0.01" name="bonus" value="0.00" class="w-full border border-green-200 rounded-xl px-4 py-3 bg-green-50 focus:bg-white focus:ring-2 focus:ring-green-500 font-bold transition-all shadow-sm text-green-900">
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-red-700 mb-2">Taxes / Deductions (₹)</label>
+          <input type="number" step="0.01" name="deductions" value="0.00" class="w-full border border-red-200 rounded-xl px-4 py-3 bg-red-50 focus:bg-white focus:ring-2 focus:ring-red-500 font-bold transition-all shadow-sm text-red-900">
+        </div>
+      </div>
+
+      <div class="mb-8 p-4 bg-indigo-50 rounded-xl border border-indigo-100 flex items-center gap-4">
+        <input type="checkbox" name="is_paid" id="is_paid" class="w-6 h-6 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300">
+        <label for="is_paid" class="text-sm font-bold text-indigo-900 cursor-pointer">Mark as Paid (Check this if funds have been transferred)</label>
+      </div>
+
+      <div class="flex justify-end items-center gap-4 pt-4">
+        <button type="submit" class="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 transition transform hover:-translate-y-0.5">Save & Issue Record</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const empInfo = {
+    {% for emp in employee_data %}
+      '{{ emp.id }}': {
+        employee_id: '{{ emp.employee_id|escapejs }}',
+        department: '{{ emp.department|escapejs }}',
+        designation: '{{ emp.designation|escapejs }}',
+        date_joined: '{{ emp.date_joined|escapejs }}',
+        bank_name: '{{ emp.bank_name|escapejs }}',
+        pan_number: '{{ emp.pan_number|escapejs }}',
+        account_number: '{{ emp.account_number|escapejs }}',
+      }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  };
+
+  const employeeSelect = document.getElementById('employeeSelect');
+
+  const updateQuickInfo = (data) => {
+    const fields = ['employee_id', 'department', 'designation', 'date_joined', 'bank_name', 'pan_number', 'account_number'];
+    fields.forEach(k => {
+      const rawValue = data[k] || '';
+      const isNA = !rawValue || rawValue.trim() === '' || rawValue === 'N/A';
+      const displayValue = isNA ? 'N/A' : rawValue;
+      
+      // Map field key to label ID
+      let labelId;
+      if (k === 'date_joined') labelId = 'doj_label';
+      else if (k === 'account_number') labelId = 'ac_label';
+      else if (k === 'pan_number') labelId = 'pan_label';
+      else if (k === 'bank_name') labelId = 'bank_label';
+      else labelId = `${k}_label`;
+      
+      // Update label text
+      const labelEl = document.getElementById(labelId);
+      if (labelEl) labelEl.textContent = displayValue;
+      
+      // Show or hide row based on whether it's N/A
+      const row = document.querySelector(`.quick-info-row[data-key="${k}"]`);
+      if (row) {
+        row.style.display = isNA ? 'none' : 'block';
+      }
+    });
+  };
+
+  // Hide N/A rows initially
+  document.addEventListener('DOMContentLoaded', function() {
+    const rows = document.querySelectorAll('.quick-info-row');
+    rows.forEach(row => {
+      const label = row.querySelector('span');
+      if (label && label.textContent.trim() === 'N/A') {
+        row.style.display = 'none';
+      }
+    });
+  });
+
+  employeeSelect.addEventListener('change', function() {
+    const v = this.value;
+    const data = empInfo[v] || {};
+    updateQuickInfo(data);
+  });
+</script>
+{% endblock %}

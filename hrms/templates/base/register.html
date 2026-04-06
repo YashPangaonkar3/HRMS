@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HR | Secure Registration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Manrope', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    .glass-login {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .bg-abstract {
+      background-image: 
+        radial-gradient(at 0% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+        radial-gradient(at 50% 0%, hsla(225,39%,20%,1) 0, transparent 50%), 
+        radial-gradient(at 100% 0%, hsla(225,39%,10%,1) 0, transparent 50%),
+        radial-gradient(at 0% 100%, hsla(225,39%,10%,1) 0, transparent 50%),
+        radial-gradient(at 50% 100%, hsla(225,39%,5%,1) 0, transparent 50%),
+        radial-gradient(at 100% 100%, hsla(225,39%,10%,1) 0, transparent 50%);
+      background-color: #0f172a;
+    }
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-login {
+      animation: fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+  </style>
+</head>
+<body class="bg-abstract flex items-center justify-center min-h-screen p-6 font-sans antialiased text-slate-900">
+
+  <div class="glass-login p-12 rounded-[48px] shadow-2xl w-full max-w-xl animate-login border border-white/20">
+    
+    <div class="text-center mb-10 leading-none">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-600/10 text-emerald-600 mb-6 shadow-inner">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+      </div>
+      <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight font-display mb-2">Initialize Profile</h1>
+      <p class="text-slate-500 font-semibold uppercase tracking-[0.2em] text-[10px]">Onboarding Identity Matrix</p>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="bg-rose-50 border-l-[6px] border-rose-500 text-rose-700 p-5 rounded-3xl mb-8 font-bold text-sm shadow-xl shadow-rose-500/5 animate-pulse">
+           {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {% csrf_token %}
+      
+      <div class="md:col-span-1">
+        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">First Name</label>
+        <input type="text" name="first_name" required placeholder="John"
+               class="block w-full px-5 py-4 bg-white/50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white sm:text-sm font-bold transition-all shadow-sm">
+      </div>
+      
+      <div class="md:col-span-1">
+        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Last Name</label>
+        <input type="text" name="last_name" required placeholder="Doe"
+               class="block w-full px-5 py-4 bg-white/50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white sm:text-sm font-bold transition-all shadow-sm">
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Staff Identifier</label>
+        <input type="text" name="username" required placeholder="staff_id_v2"
+               class="block w-full px-5 py-4 bg-white/50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white sm:text-sm font-bold transition-all shadow-sm">
+      </div>
+
+      <div class="md:col-span-2">
+        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Electronic Mail</label>
+        <input type="email" name="email" required placeholder="name@company.com"
+               class="block w-full px-5 py-4 bg-white/50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white sm:text-sm font-bold transition-all shadow-sm">
+      </div>
+      
+      <div class="md:col-span-1">
+        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Access String</label>
+        <input type="password" name="password1" required placeholder="••••••••"
+               class="block w-full px-5 py-4 bg-white/50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white sm:text-sm font-bold transition-all shadow-sm">
+      </div>
+
+      <div class="md:col-span-1">
+        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">Confirm String</label>
+        <input type="password" name="password2" required placeholder="••••••••"
+               class="block w-full px-5 py-4 bg-white/50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white sm:text-sm font-bold transition-all shadow-sm">
+      </div>
+      
+      <div class="md:col-span-2 pt-4">
+          <button type="submit"
+                  class="w-full flex justify-center py-4 px-6 border-b-4 border-emerald-700 rounded-2xl shadow-xl shadow-emerald-500/20 text-xs font-black uppercase tracking-widest text-white bg-emerald-600 hover:bg-emerald-700 transition-all transform hover:scale-[1.02] active:scale-[0.98]">
+            Commit Profile
+          </button>
+      </div>
+    </form>
+
+    <p class="text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-10">
+      Established Identity?
+      <a href="{% url 'login' %}" class="text-blue-500 hover:text-blue-600 transition-colors ml-1">Establish Session</a>
+    </p>
+  </div>
+
+  <footer class="fixed bottom-10 text-slate-500 text-[10px] font-black uppercase tracking-[0.3em] opacity-50 text-center w-full">
+    © 2026 <span class="text-emerald-400 tracking-normal">@Yash</span> | All Rights Reserved
+  </footer>
+
+</body>
+</html>
