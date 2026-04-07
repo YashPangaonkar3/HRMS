@@ -69,20 +69,21 @@
   </div>
 </div>
 
+{{ employee_data|json_script:"employee-data" }}
 <script>
-  const empInfo = {
-    {% for emp in employee_data %}
-      '{{ emp.id }}': {
-        employee_id: '{{ emp.employee_id|escapejs }}',
-        department: '{{ emp.department|escapejs }}',
-        designation: '{{ emp.designation|escapejs }}',
-        date_joined: '{{ emp.date_joined|escapejs }}',
-        bank_name: '{{ emp.bank_name|escapejs }}',
-        pan_number: '{{ emp.pan_number|escapejs }}',
-        account_number: '{{ emp.account_number|escapejs }}',
-      }{% if not forloop.last %},{% endif %}
-    {% endfor %}
-  };
+  const employeeDataArray = JSON.parse(document.getElementById('employee-data').textContent);
+  const empInfo = {};
+  employeeDataArray.forEach(emp => {
+      empInfo[emp.id] = {
+        employee_id: emp.employee_id,
+        department: emp.department,
+        designation: emp.designation,
+        date_joined: emp.date_joined,
+        bank_name: emp.bank_name,
+        pan_number: emp.pan_number,
+        account_number: emp.account_number
+      };
+  });
 
   const employeeSelect = document.getElementById('employeeSelect');
 

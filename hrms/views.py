@@ -2,9 +2,9 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.core.exceptions import ValidationError
-from .models import User, Department, Leave, Announcement, Attendance, Payroll, Notification
+from hrms.models import User, Department, Leave, Announcement, Attendance, Payroll, Notification
 from django.utils import timezone
-from .decorators import admin_required, employee_required
+from hrms.decorators import admin_required, employee_required
 
 
 def create_notification(recipient, message, actor=None):
@@ -56,7 +56,7 @@ def login_view(request):
 def logout_view(request):
     # If an employee logs out while still clocked in for today, close their shift.
     if request.user.is_authenticated and request.user.role == 'employee':
-        from .models import Attendance
+        from hrms.models import Attendance
         from django.utils import timezone
         today = timezone.localtime(timezone.now()).date()
         open_attendance = Attendance.objects.filter(employee=request.user, date=today, clock_out__isnull=True).first()
@@ -124,7 +124,7 @@ def admin_status_action(request, emp_id, action):
 
 @admin_required
 def admin_dashboard(request):
-    from .models import Department, Leave
+    from hrms.models import Department, Leave
     today = timezone.now().date()
 
     total_employees  = User.objects.filter(role='employee', status='approved').count()
@@ -146,11 +146,11 @@ def admin_dashboard(request):
     })
 
 
-from .decorators import employee_required
+from hrms.decorators import employee_required
 
 @employee_required
 def employee_dashboard(request):
-    from .models import Announcement, Attendance
+    from hrms.models import Announcement, Attendance
     from django.utils import timezone
     today = timezone.now().date()
     # Check if clocked in today
@@ -167,7 +167,7 @@ def employee_dashboard(request):
 
 @employee_required
 def employee_clock_in_out(request):
-    from .models import Attendance
+    from hrms.models import Attendance
     from django.utils import timezone
     local_now = timezone.localtime(timezone.now())
     today     = local_now.date()
@@ -536,101 +536,124 @@ def number_to_words(n):
 
 def generate_pdf_response(payroll):
     from django.http import HttpResponse
+    from django.conf import settings
+    import os
     import io
     import datetime
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import letter
-    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+    from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
     
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
     story = []
     
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle(name='TitleStyle', parent=styles['Heading1'], alignment=TA_CENTER, textColor=colors.HexColor("#1e3a8a"), fontSize=18)
-    subtitle_style = ParagraphStyle(name='SubTitleStyle', parent=styles['Normal'], alignment=TA_CENTER, textColor=colors.gray, fontSize=10)
     
-    # Header
-    story.append(Paragraph("<b>ENTERPRISE HRMS</b>", title_style))
-    story.append(Paragraph("123 Business Avenue, Tech District, City, Country<br/>Email: hr@enterprise.com | Phone: +1 234 567 8900", subtitle_style))
-    story.append(Spacer(1, 20))
+    # 1. Header with Company Name & Address
+    # Try to load the logo image, otherwise fallback to the formatted text
+    logo_path = os.path.join(settings.BASE_DIR, 'static', 'logo.png')
+    if os.path.exists(logo_path):
+        # The image width/height constraints ratio
+        left_header = Image(logo_path, width=170, height=75)
+    else:
+        title_text = '<b><font color="#4db8b6" size="28">Genic</font><br/><font color="#1d4ed8" size="28">Minds</font><br/>&nbsp;&nbsp;<font color="#4db8b6" size="9"><i>Ideas Matters!</i></font></b>'
+        left_header = Paragraph(title_text, styles['Normal'])
     
+    company_details = '<font size="9">4th Floor, Vedant Tower 27, Jule Solapur Rd, opposite to<br/>Bharati Vidyapeeth, Vishal Nagar, Solapur - 413224.<br/>(Maharashtra, India.)<br/>infoigy@gmail.com | www.infoigy.com</font>'
+    
+    header_data = [[left_header, Paragraph(company_details, styles['Normal'])]]
+    t0 = Table(header_data, colWidths=[200, 320])
+    t0.setStyle(TableStyle([
+        ('ALIGN', (0,0), (0,0), 'LEFT'),
+        ('ALIGN', (1,0), (1,0), 'LEFT'),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+    ]))
+    story.append(t0)
+    story.append(Spacer(1, 40))
+    
+    # 2. Title
+    story.append(Paragraph("<b>Salary Slip</b>", ParagraphStyle(name='Title', alignment=TA_CENTER, fontSize=14, fontName="Helvetica-Bold")))
+    story.append(Spacer(1, 30))
+    
+    # 3. Employee Info
     month_name = datetime.date(payroll.year, payroll.month, 1).strftime('%B')
-    story.append(Paragraph(f"<b>PAYSLIP FOR THE MONTH OF {month_name.upper()} {payroll.year}</b>", ParagraphStyle(name='P', alignment=TA_CENTER, fontSize=12, spaceAfter=20)))
-    
-    # Employee Details Table
+    pay_period = f"{month_name} {payroll.year}"
     emp_id = payroll.employee.employee_id or payroll.employee.username or "N/A"
-    doj_date = payroll.employee.date_joined or payroll.employee.date_joined
+    doj_date = payroll.employee.date_joined
     doj = doj_date.strftime('%d-%b-%Y') if doj_date else "N/A"
-    dept = payroll.employee.department.name if getattr(payroll.employee, 'department', None) else 'N/A'
-    bank_name = getattr(payroll.employee, 'bank_name', None) or 'N/A'
-    pan_no = getattr(payroll.employee, 'pan_number', None) or 'N/A'
-    ac_number = getattr(payroll.employee, 'account_number', None) or 'N/A'
-
-    emp_data = [
-        ["Employee ID:", emp_id, "Department:", dept],
-        ["Employee Name:", payroll.employee.get_full_name() or payroll.employee.username, "Designation:", payroll.employee.designation or "N/A"],
-        ["Date of Joining:", doj, "Bank Name:", bank_name],
-        ["PAN No:", pan_no, "A/C Number:", ac_number],
-    ]
+    dept = getattr(payroll.employee.department, 'name', 'N/A') if getattr(payroll.employee, 'department', None) else 'N/A'
     
-    t1 = Table(emp_data, colWidths=[100, 160, 100, 160])
+    emp_data = [
+        [f"Date of Joining", ":", doj, "", f"Employee Name:", f"{payroll.employee.get_full_name() or payroll.employee.username}"],
+        [f"Pay Period", ":", pay_period, "", f"Designation", ":  " + (payroll.employee.designation or "")]
+    ]
+    emp_data.append([f"Employee Id", ":", emp_id, "", f"Department", ":  " + dept])
+    
+    t1 = Table(emp_data, colWidths=[90, 10, 150, 20, 90, 160])
     t1.setStyle(TableStyle([
         ('ALIGN', (0,0), (-1,-1), 'LEFT'),
-        ('FONTNAME', (0,0), (0,-1), 'Helvetica-Bold'),
-        ('FONTNAME', (2,0), (2,-1), 'Helvetica-Bold'),
-        ('TEXTCOLOR', (0,0), (-1,-1), colors.black),
+        ('FONTNAME', (0,0), (-1,-1), 'Helvetica'),
         ('FONTSIZE', (0,0), (-1,-1), 10),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
-        ('TOPPADDING', (0,0), (-1,-1), 6),
-        ('LINEBELOW', (0,0), (-1,-1), 0.5, colors.lightgrey),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 2),
+        ('TOPPADDING', (0,0), (-1,-1), 2),
     ]))
     story.append(t1)
-    story.append(Spacer(1, 20))
+    story.append(Spacer(1, 30))
     
-    # Salary Details Table
+    # 4. Salary Details Table
     gross = float(payroll.basic_salary) + float(payroll.allowances)
     deductions = float(payroll.deductions)
     net = float(payroll.net_salary)
     
     sal_data = [
-        ["EARNINGS", "AMOUNT (Rs.)", "DEDUCTIONS", "AMOUNT (Rs.)"],
-        ["Basic Salary", f"{payroll.basic_salary:.2f}", "Tax & Deductions", f"{deductions:.2f}"],
-        ["Allowances", f"{payroll.allowances:.2f}", "", ""],
-        ["", "", "", ""],
-        ["GROSS EARNINGS", f"{gross:.2f}", "TOTAL DEDUCTIONS", f"{deductions:.2f}"]
+        ["Earnings", "Amount"],
     ]
+    sal_data.append(["Basic Pay", f"{payroll.basic_salary:,.0f}"])
+    sal_data.append(["Incentive Pay", f"{float(payroll.allowances):,.0f}"])
+    sal_data.append(["House Rent Allowance", "0"])
+    sal_data.append(["Meal Allowance", "0"])
+    sal_data.append(["", ""])
+    sal_data.append(["Total Earnings", f"{gross:,.0f}"])
     
-    t2 = Table(sal_data, colWidths=[160, 100, 160, 100])
+    sal_data.append(["Deductions", "Amount"])
+    sal_data.append(["Provident Fund", f"{float(payroll.deductions):,.0f}"])
+    sal_data.append(["Professional Tax", "0"])
+    sal_data.append(["Loan", "0"])
+    sal_data.append(["", ""])
+    sal_data.append(["Total Deductions", f"{deductions:,.0f}"])
+    sal_data.append(["Net Pay", f"{net:,.0f}"])
+    
+    t2 = Table(sal_data, colWidths=[380, 140])
     t2.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#1e40af")),
-        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
-        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
-        ('ALIGN', (1,0), (1,-1), 'RIGHT'),
-        ('ALIGN', (3,0), (3,-1), 'RIGHT'),
-        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-        ('FONTNAME', (0,-1), (-1,-1), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 8),
-        ('TOPPADDING', (0,0), (-1,-1), 8),
-        ('LINEBELOW', (0,1), (-1,-2), 0.5, colors.lightgrey),
-        ('BACKGROUND', (0,-1), (-1,-1), colors.HexColor("#e2e8f0")),
-        ('BOX', (0,0), (-1,-1), 1, colors.HexColor("#cbd5e1")),
-        ('INNERGRID', (0,0), (-1,-1), 0.5, colors.HexColor("#cbd5e1")),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'), # Earnings Header
+        ('FONTNAME', (0,7), (-1,7), 'Helvetica-Bold'), # Deductions Header
+        ('FONTNAME', (0,6), (-1,6), 'Helvetica-Bold'), # Total Earnings
+        ('FONTNAME', (0,12), (-1,13), 'Helvetica-Bold'), # Total Deductions & Net Pay
+        
+        ('ALIGN', (0,0), (0,-1), 'LEFT'),
+        ('ALIGN', (0,6), (0,6), 'RIGHT'), # Total Earnings Right
+        ('ALIGN', (0,12), (0,13), 'RIGHT'), # Total Deductions & Net Pay Right
+        ('ALIGN', (1,0), (1,-1), 'LEFT'), # Amount left
+        
+        ('GRID', (0,0), (-1,-1), 1, colors.black),
+        ('FONTSIZE', (0,0), (-1,-1), 10),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+        ('TOPPADDING', (0,0), (-1,-1), 4),
     ]))
     story.append(t2)
     story.append(Spacer(1, 20))
     
-    # Net Pay
-    story.append(Paragraph(f"<b>NET PAY: Rs. {net:.2f}</b>", ParagraphStyle(name='NP', alignment=TA_CENTER, fontSize=12, textColor=colors.HexColor("#16a34a"), spaceAfter=5)))
-    story.append(Paragraph(f"<i>(Rupees {number_to_words(net)})</i>", ParagraphStyle(name='NW', alignment=TA_CENTER, fontSize=10, textColor=colors.gray)))
-    story.append(Spacer(1, 50))
+    # 5. Amount in Rupees
+    story.append(Paragraph("<b>Amount In Rupees:</b>", ParagraphStyle(name='AIR', fontName="Helvetica-Bold", fontSize=10)))
+    story.append(Spacer(1, 40))
     
-    # Signatures
+    # 6. Signatures
     sig_data = [
-        ["_"*30, "_"*30],
-        ["Employer Signature", "Employee Signature"]
+        ["Employer Signature", "Employee"],
+        ["\n\n\n___________________________", "\n\n\n___________________________"]
     ]
     t3 = Table(sig_data, colWidths=[260, 260])
     t3.setStyle(TableStyle([
@@ -640,8 +663,8 @@ def generate_pdf_response(payroll):
     ]))
     story.append(t3)
     
-    story.append(Spacer(1, 20))
-    story.append(Paragraph("<i>This is a computer generated payslip and does not require a physical signature.</i>", ParagraphStyle(name='F', alignment=TA_CENTER, fontSize=8, textColor=colors.gray)))
+    story.append(Spacer(1, 30))
+    story.append(Paragraph("This is system generated pay slip", ParagraphStyle(name='F', alignment=TA_CENTER, fontSize=10, fontName='Helvetica')))
     
     doc.build(story)
     
@@ -654,7 +677,7 @@ def generate_pdf_response(payroll):
 
 @admin_required
 def admin_download_payslip(request, p_id):
-    from .models import Payroll
+    from hrms.models import Payroll
     try:
         payroll = Payroll.objects.get(id=p_id)
         return generate_pdf_response(payroll)
@@ -665,14 +688,14 @@ def admin_download_payslip(request, p_id):
 
 @employee_required
 def employee_payroll(request):
-    from .models import Payroll
+    from hrms.models import Payroll
     payrolls = Payroll.objects.filter(employee=request.user).order_by('-year', '-month')
     return render(request, 'employee/payroll_list.html', {'payrolls': payrolls})
 
 
 @employee_required
 def employee_download_payslip(request, p_id):
-    from .models import Payroll
+    from hrms.models import Payroll
     try:
         payroll = Payroll.objects.get(id=p_id, employee=request.user)
         return generate_pdf_response(payroll)
@@ -683,7 +706,7 @@ def employee_download_payslip(request, p_id):
 
 @employee_required
 def employee_history(request):
-    from .models import Attendance, Leave
+    from hrms.models import Attendance, Leave
 
     attendances = Attendance.objects.filter(employee=request.user).order_by('-date')
     leaves      = Leave.objects.filter(employee=request.user).order_by('-applied_on')
@@ -717,7 +740,7 @@ def employee_history(request):
 
 @admin_required
 def admin_employee_detail(request, emp_id):
-    from .models import Attendance, Leave, Department
+    from hrms.models import Attendance, Leave, Department
     from django.shortcuts import get_object_or_404
 
     employee = get_object_or_404(User, id=emp_id, role='employee')
@@ -774,7 +797,7 @@ def admin_employee_detail(request, emp_id):
 
 @admin_required
 def admin_employee_edit_attendance(request, att_id):
-    from .models import Attendance
+    from hrms.models import Attendance
     from django.shortcuts import get_object_or_404
 
     att = get_object_or_404(Attendance, id=att_id)
